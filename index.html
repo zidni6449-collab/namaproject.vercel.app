@@ -679,10 +679,26 @@ async function generateVideo() {
   updateProgress(15, 'Mengonversi file...');
 
   try {
-    var imgB64 = await toBase64(imgFile);
+    // Kompres gambar otomatis
+    updateProgress(10, 'Mengompres gambar...');
+    var imgB64 = await compressImage(imgFile, 800, 0.75);
+
+    // Cek ukuran video
+    var vidMB = vidFile.size / 1024 / 1024;
+    if (vidMB > 3.5) {
+      throw new Error('Video terlalu besar (' + vidMB.toFixed(1) + 'MB). Maks 3.5MB. Gunakan video TikTok yang lebih kecil atau kompres dulu.');
+    }
+    updateProgress(20, 'Memproses video...');
     var vidB64 = await toBase64(vidFile);
 
-    updateProgress(25, 'Mengirim ke Magnific API...');
+    // Cek total ukuran
+    var totalB = imgB64.length * 0.75 + vidB64.length * 0.75;
+    var totalMB = totalB / 1024 / 1024;
+    if (totalMB > 3.8) {
+      throw new Error('Total file terlalu besar (' + totalMB.toFixed(1) + 'MB). Kompres video lebih kecil lagi (maks 3MB).');
+    }
+
+    updateProgress(30, 'Mengirim ke Magnific API...');
 
     var res = await fetch('/api/motion', {
       method: 'POST',
@@ -772,6 +788,36 @@ function toBase64(file) {
     r.readAsDataURL(file);
   });
 }
+
+// Kompres gambar otomatis pakai canvas
+function compressImage(file, maxSize, quality) {
+  return new Promise((resolve, reject) => {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.createElement('canvas');
+        var w = img.width, h = img.height;
+        // Scale down jika lebih besar dari maxSize
+        if (w > maxSize || h > maxSize) {
+          if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+          else { w = Math.round(w * maxSize / h); h = maxSize; }
+        }
+        canvas.width = w; canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        // Export sebagai JPEG dengan kualitas tertentu
+        var dataUrl = canvas.toDataURL('image/jpeg', quality || 0.75);
+        resolve(dataUrl.split(',')[1]);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 </script>
 </body>
