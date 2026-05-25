@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SAKENIFIC - AI Creative Studio</title>
+<meta name="description" content="AI Creative Studio - Motion Control, Video, Image, Voice, Lipsync"/>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0a0a0a;min-height:100vh}
+.app{background:#0a0a0a;color:#f5f5f0;font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
+.page{display:none}.page.active{display:block}
+
+/* SIDEBAR */
+.sidebar{position:fixed;top:0;right:0;height:100%;width:310px;z-index:50;display:flex;flex-direction:column;transform:translateX(100%);transition:transform 0.3s ease-out;background:rgba(8,8,8,0.97);backdrop-filter:blur(24px);border-left:1px solid rgba(42,42,26,0.8);overflow-y:auto}
+.sidebar.open{transform:translateX(0)}
+.sb-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #1a1a0a}
+.sb-lbl{font-size:10px;font-weight:700;color:#888878;letter-spacing:4px;text-transform:uppercase}
+.sb-close{width:28px;height:28px;border-radius:8px;background:#1a1a0a;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;color:#888878}
+.sb-close:hover{color:#fff}
+.sb-avatar-sec{display:flex;flex-direction:column;align-items:center;padding:20px 16px;gap:6px;border-bottom:1px solid #1a1a0a}
+.sb-avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#F5C518,#b8890a);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#000;box-shadow:0 4px 20px rgba(245,197,24,0.2)}
+.sb-name{font-size:14px;font-weight:700;color:#f5f5f0;margin-top:4px}
+.sb-sub{font-size:11px;color:#444438}
+.sb-sec{padding:14px 16px;border-bottom:1px solid #1a1a0a}
+.sb-sec-lbl{font-size:9px;font-weight:700;color:#888878;letter-spacing:4px;text-transform:uppercase;margin-bottom:10px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.stat-box{background:#0f0f0f;border:1px solid #2a2a1a;border-radius:12px;padding:10px 12px}
+.stat-box p:first-child{font-size:9px;color:#888878;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+.stat-num{font-size:20px;font-weight:900;color:#f5f5f0}
+.stat-num.gold{color:#F5C518}
+.prog-track{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-bottom:4px}
+.prog-fill{height:100%;background:linear-gradient(90deg,#F5C518,#b8890a);border-radius:3px}
+.prog-note{font-size:9px;color:#444438}
+.api-display{display:flex;align-items:center;gap:8px;background:#0f0f0f;border-radius:12px;padding:8px 12px;border:1px solid #2a2a1a;margin-bottom:8px}
+.api-display span{flex:1;font-size:11px;font-family:monospace;color:#888878}
+.api-btn-row{display:flex;gap:8px;margin-bottom:8px}
+.api-btn{flex:1;padding:8px;border-radius:8px;font-size:11px;font-weight:700;border:1px solid #2a2a1a;background:transparent;color:#888878;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s}
+.api-btn:hover{border-color:rgba(245,197,24,0.5);color:#F5C518}
+.conn-row{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;border:1px solid #2a2a1a;background:#0f0f0f}
+.conn-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.conn-dot.on{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,0.6)}
+.conn-dot.off{background:#3a3200}
+.conn-txt{font-size:11px;font-weight:700}
+.conn-txt.on{color:#22c55e}
+.conn-txt.off{color:#444438}
+.sb-menu-item{display:flex;align-items:center;gap:8px;background:#0f0f0f;border:1px solid #2a2a1a;border-radius:12px;padding:12px;cursor:pointer;transition:border-color 0.2s}
+.sb-menu-item:hover{border-color:rgba(245,197,24,0.4)}
+.sb-mi-icon{width:28px;height:28px;border-radius:8px;background:#1c1c0a;border:1px solid #3a3200;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-mi-text p:first-child{font-size:11px;font-weight:700;color:#f5f5f0}
+.sb-mi-text p:last-child{font-size:9px;color:#444438}
+.sb-mi-arr{margin-left:auto;color:#444438}
+.lang-row{display:flex;flex-direction:column;gap:6px}
+.lang-btn{width:100%;display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:12px;border:1px solid #2a2a1a;background:transparent;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif}
+.lang-btn.active{border-color:#F5C518;background:#1c1c0a;color:#F5C518}
+.lang-btn.inactive{color:#888878}
+.lang-check{width:16px;height:16px;border-radius:50%;background:#F5C518;display:flex;align-items:center;justify-content:center}
+.agus-sb{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;border:1px solid rgba(245,197,24,0.3);background:linear-gradient(135deg,rgba(245,197,24,0.08),rgba(184,137,10,0.05));cursor:pointer;transition:all 0.2s}
+.agus-sb:hover{border-color:rgba(245,197,24,0.6)}
+.agus-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#F5C518,#b8890a);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#000;flex-shrink:0}
+.agus-name{font-size:11px;font-weight:700;color:#F5C518;display:block;letter-spacing:1px}
+.agus-desc{font-size:9px;color:rgba(255,255,255,0.35)}
+.agus-wave{display:flex;align-items:center;gap:2px;margin-left:auto}
+.agus-wave span{display:inline-block;width:2px;background:#F5C518;border-radius:1px;animation:wv 0.9s ease-in-out infinite}
+.agus-wave span:nth-child(1){height:8px}.agus-wave span:nth-child(2){height:14px;animation-delay:.1s}.agus-wave span:nth-child(3){height:20px;animation-delay:.2s}.agus-wave span:nth-child(4){height:12px;animation-delay:.3s}.agus-wave span:nth-child(5){height:6px;animation-delay:.4s}
+.sb-footer{padding:16px;text-align:center}
+.sb-footer p{font-size:9px;color:#2a2a1a}
+
+/* HEADER */
+.header{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #1a1a0a;background:rgba(8,8,8,0.95);backdrop-filter:blur(20px)}
+.h-logo p:first-child{font-size:14px;font-weight:900;color:#f5f5f0;letter-spacing:-0.5px}
+.h-logo p:last-child{font-size:9px;color:#888878;margin-top:1px}
+.h-counter{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;border:1px solid #3a3200;background:#1c1c0a}
+.h-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite}
+.h-num{font-size:12px;font-weight:900;color:#F5C518}
+.h-gen{font-size:9px;font-weight:500;color:#888878}
+.h-menu-btn{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;background:none;border:none}
+.h-menu-icon{width:28px;height:28px;border-radius:10px;border:1px solid #3a3200;background:#1c1c0a;display:flex;align-items:center;justify-content:center}
+.h-menu-lbl{font-size:8px;font-weight:700;color:#888878;letter-spacing:3px}
+
+/* HERO */
+.hero-bg{position:relative;overflow:hidden;min-height:200px}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.55) 0%,rgba(0,0,0,0.85) 70%,#0a0a0a 100%)}
+.hero-grad{position:absolute;inset:0;background:radial-gradient(ellipse at 70% 40%,rgba(180,120,0,0.4) 0%,rgba(40,20,0,0.6) 45%,#0a0a0a 80%)}
+.hero-content{position:relative;z-index:10;padding:36px 16px 44px}
+.hero-tag{font-size:9px;font-weight:700;color:#F5C518;letter-spacing:4px;text-transform:uppercase;margin-bottom:4px}
+.hero-title{font-size:32px;font-weight:900;color:#f5f5f0;line-height:1.1}
+.hero-desc{font-size:11px;color:#888878;margin-top:6px;max-width:280px;line-height:1.6}
+
+/* MARQUEE */
+.marquee{border-top:1px solid #1a1a0a;border-bottom:1px solid #1a1a0a;background:#0a0a06;overflow:hidden;padding:8px 0}
+.marquee-inner{display:flex;white-space:nowrap;animation:marquee 35s linear infinite;width:max-content}
+.marquee-inner span{font-size:10px;font-weight:600;color:#888878;letter-spacing:1px;padding-right:40px}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+@keyframes wv{0%,100%{transform:scaleY(1)}50%{transform:scaleY(0.3)}}
+
+/* CARDS */
+.cards-wrap{padding:12px 16px 32px;display:flex;flex-direction:column;gap:12px}
+.feat-card{position:relative;width:100%;border-radius:16px;overflow:hidden;border:1px solid #2a2a1a;min-height:160px;cursor:pointer;transition:border-color 0.3s;text-align:left;background:transparent}
+.feat-card:hover{border-color:rgba(245,197,24,0.6)}
+.feat-bg{position:absolute;inset:0;background:linear-gradient(135deg,rgba(20,15,0,0.95) 0%,rgba(40,28,0,0.7) 50%,rgba(60,40,0,0.4) 100%)}
+.feat-glow{position:absolute;inset:0;opacity:0;transition:opacity 0.3s;background:linear-gradient(135deg,rgba(245,197,24,0.08) 0%,transparent 60%)}
+.feat-card:hover .feat-glow{opacity:1}
+.feat-body{position:relative;z-index:10;padding:16px;min-height:160px;display:flex;flex-direction:column;justify-content:space-between}
+.feat-badge{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.feat-badge-icon{width:32px;height:32px;border-radius:10px;background:rgba(245,197,24,0.2);border:1px solid rgba(245,197,24,0.4);display:flex;align-items:center;justify-content:center}
+.feat-badge-lbl{font-size:9px;font-weight:700;color:#F5C518;letter-spacing:4px;text-transform:uppercase}
+.feat-title{font-size:16px;font-weight:900;color:#f5f5f0;letter-spacing:1px}
+.feat-desc{font-size:11px;color:#888878;margin-top:4px;line-height:1.6;max-width:220px}
+.feat-link{display:flex;align-items:center;gap:6px;margin-top:12px}
+.feat-link span{font-size:10px;font-weight:700;color:#F5C518}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sm-card{position:relative;border-radius:16px;overflow:hidden;border:1px solid #2a2a1a;min-height:110px;cursor:pointer;transition:border-color 0.3s;display:flex;flex-direction:column;background:transparent;text-align:left}
+.sm-card:hover{border-color:rgba(245,197,24,0.6)}
+.sm-bg{position:absolute;inset:0}
+.sm-bg-v{background:radial-gradient(ellipse at 50% 30%,rgba(180,120,0,0.5),#0d0900 70%)}
+.sm-bg-i{background:radial-gradient(ellipse at 60% 20%,rgba(140,90,0,0.55),#0d0a05 70%)}
+.sm-bg-a{background:radial-gradient(ellipse at 40% 60%,rgba(160,100,0,0.45),#0d0900 70%)}
+.sm-bg-l{background:radial-gradient(ellipse at 55% 35%,rgba(120,75,0,0.5),#0a0805 70%)}
+.sm-glow{position:absolute;inset:0;opacity:0;transition:opacity 0.3s;background:linear-gradient(135deg,rgba(245,197,24,0.08),transparent 60%)}
+.sm-card:hover .sm-glow{opacity:1}
+.sm-body{position:relative;z-index:10;padding:12px;display:flex;flex-direction:column;gap:8px;height:100%;justify-content:space-between}
+.sm-top{display:flex;align-items:center;justify-content:space-between}
+.sm-icon{width:32px;height:32px;border-radius:10px;background:rgba(28,28,10,0.8);border:1px solid #3a3200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.sm-arr{color:#2a2a1a;transition:color 0.2s}
+.sm-card:hover .sm-arr{color:rgba(245,197,24,0.6)}
+.sm-info p:first-child{font-size:11px;font-weight:900;color:#f5f5f0;letter-spacing:0.5px}
+.sm-info p:last-child{font-size:10px;color:#888878;margin-top:2px;line-height:1.4}
+.full-card{width:100%;display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:16px;border:1px solid #2a2a1a;background:#0f0f0f;cursor:pointer;transition:all 0.2s;text-align:left}
+.full-card:hover{border-color:rgba(245,197,24,0.5)}
+.full-card:hover .fc-arr{color:rgba(245,197,24,0.6)}
+.fc-icon{width:28px;height:28px;border-radius:8px;background:#1c1c0a;border:1px solid #3a3200;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fc-txt p:first-child{font-size:12px;font-weight:900;color:#f5f5f0}
+.fc-txt p:last-child{font-size:10px;color:#888878}
+.fc-arr{margin-left:auto;color:#444438;transition:color 0.2s}
+
+/* MOTION PAGE */
+.back-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;border:1px solid #2a2a1a;background:transparent;font-size:11px;color:#888878;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;margin:12px 16px 0}
+.back-btn:hover{border-color:#3a3200;color:#F5C518}
+.motion-hero{padding:16px 16px 12px;border-bottom:1px solid #1a1a0a}
+.motion-title{font-size:16px;font-weight:900;color:#f5f5f0;letter-spacing:1px}
+.motion-sub{font-size:10px;color:#888878;margin-top:2px}
+.warn-box{display:flex;align-items:flex-start;gap:8px;background:rgba(180,90,0,0.06);border:1px solid rgba(180,90,0,0.2);border-radius:10px;padding:10px 12px;margin-top:10px}
+.warn-txt{font-size:10px;color:rgba(255,200,100,0.55);line-height:1.5}
+.tab-row{display:flex;gap:4px;padding:10px 16px 0;border-bottom:1px solid #1a1a0a}
+.mtab{padding:8px 16px;border-radius:8px 8px 0 0;font-size:11px;font-weight:600;cursor:pointer;border:1px solid transparent;border-bottom:none;background:transparent;color:rgba(255,255,255,0.35);font-family:'Inter',sans-serif;transition:all 0.2s}
+.mtab.act{background:rgba(245,197,24,0.08);border-color:rgba(245,197,24,0.25);color:#F5C518}
+.mtab.soon{opacity:0.3;cursor:default;font-size:10px}
+.mform{padding:14px 16px 48px;display:flex;flex-direction:column;gap:14px}
+.flbl{font-size:10px;font-weight:700;color:#888878;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.flbl .hint{font-size:9px;color:#444438;background:rgba(255,255,255,0.04);padding:2px 7px;border-radius:4px;font-weight:400;letter-spacing:0;text-transform:none}
+.finput{width:100%;background:#0f0f0f;border:1px solid #2a2a1a;border-radius:10px;padding:10px 36px 10px 12px;font-size:13px;color:#f5f5f0;outline:none;font-family:'Inter',sans-serif;transition:border-color 0.2s}
+.finput:focus{border-color:rgba(245,197,24,0.4)}
+.finput::placeholder{color:#444438}
+.inp-rel{position:relative}
+.inp-eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#444438;padding:0}
+.uzone{border:1px dashed #2a2a1a;border-radius:12px;padding:24px 16px;text-align:center;cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.01)}
+.uzone:hover{border-color:rgba(245,197,24,0.35);background:rgba(245,197,24,0.03)}
+.uzone-icon{font-size:28px;color:#2a2a1a;margin-bottom:8px}
+.uzone-title{font-size:12px;color:#888878;font-weight:600;margin-bottom:2px}
+.uzone-sub{font-size:10px;color:#444438}
+.uzone-note{font-size:9px;color:rgba(245,197,24,0.4);margin-top:6px}
+.mlist{display:flex;flex-direction:column;gap:6px}
+.mopt{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #2a2a1a;border-radius:10px;cursor:pointer;background:#0f0f0f;transition:all 0.2s}
+.mopt:hover{border-color:rgba(245,197,24,0.3)}
+.mopt.sel{border-color:rgba(245,197,24,0.5);background:rgba(245,197,24,0.06)}
+.mradio{width:14px;height:14px;border-radius:50%;border:2px solid #2a2a1a;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mopt.sel .mradio{border-color:#F5C518}
+.mrdot{width:6px;height:6px;border-radius:50%;background:#F5C518;display:none}
+.mopt.sel .mrdot{display:block}
+.mopt-name{font-size:12px;color:#f5f5f0;font-weight:600;flex:1}
+.mtag{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:700}
+.t-std{background:rgba(255,255,255,0.06);color:#888878}
+.t-pro{background:rgba(245,197,24,0.12);color:#F5C518;border:1px solid rgba(245,197,24,0.3)}
+.ptarea{width:100%;background:#0f0f0f;border:1px solid #2a2a1a;border-radius:10px;padding:10px 12px;font-size:12px;color:#f5f5f0;outline:none;font-family:'Inter',sans-serif;resize:none;min-height:68px;transition:border-color 0.2s}
+.ptarea:focus{border-color:rgba(245,197,24,0.4)}
+.ptarea::placeholder{color:#444438}
+.orow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.obtn{padding:9px;border:1px solid #2a2a1a;border-radius:10px;text-align:center;font-size:11px;font-weight:600;cursor:pointer;background:#0f0f0f;color:#888878;transition:all 0.2s;font-family:'Inter',sans-serif}
+.obtn.act{border-color:rgba(245,197,24,0.5);background:rgba(245,197,24,0.06);color:#F5C518}
+.srow{display:flex;align-items:center;gap:12px}
+.sval{font-size:13px;font-weight:700;color:#F5C518;min-width:36px;text-align:right}
+input[type=range]{flex:1;accent-color:#F5C518;height:4px;cursor:pointer}
+.shints{display:flex;justify-content:space-between;margin-top:3px}
+.shints span{font-size:9px;color:#444438}
+.gen-btn{width:100%;padding:14px;background:linear-gradient(135deg,#F5C518,#b8890a);border:none;border-radius:12px;font-size:14px;font-weight:900;color:#000;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:1px;transition:all 0.2s;margin-top:4px}
+.gen-btn:hover{opacity:0.88;transform:translateY(-1px)}
+.gen-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+
+/* RESULT */
+.result-box{background:#0f0f0f;border:1px solid #2a2a1a;border-radius:12px;padding:14px;margin-top:4px}
+.result-box video{width:100%;border-radius:8px;margin-top:8px}
+.result-title{font-size:11px;font-weight:700;color:#888878;letter-spacing:2px;margin-bottom:4px}
+.result-status{font-size:12px;color:#F5C518}
+.result-status.err{color:#e05050}
+.result-status.ok{color:#22c55e}
+
+/* OVERLAY */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:40;pointer-events:none;transition:background 0.3s}
+.overlay.on{background:rgba(0,0,0,0.5);pointer-events:all}
+
+/* LOADING SPINNER */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,0.3);border-top-color:#000;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- ======= SIDEBAR ======= -->
+  <div class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <span class="sb-lbl">PROFIL</span>
+      <button class="sb-close" onclick="closeSidebar()">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="sb-avatar-sec">
+      <div class="sb-avatar">AI</div>
+      <p class="sb-name">SAKENIFIC User</p>
+      <p class="sb-sub">magnific.ai</p>
+    </div>
+    <div class="sb-sec">
+      <p class="sb-sec-lbl">RASIO SUKSES</p>
+      <div class="stat-grid">
+        <div class="stat-box"><p>GENERASI BERHASIL</p><p class="stat-num" id="totalGen">0</p></div>
+        <div class="stat-box"><p>SUKSES</p><p class="stat-num gold">98.6%</p></div>
+      </div>
+      <div class="prog-track"><div class="prog-fill" style="width:98.6%"></div></div>
+      <p class="prog-note">Berdasarkan semua generasi</p>
+    </div>
+    <div class="sb-sec">
+      <p class="sb-sec-lbl">API KEY</p>
+      <div class="api-display">
+        <span id="apiDisp">Belum ada API key</span>
+        <button style="background:none;border:none;cursor:pointer;color:#444438" onclick="toggleApiDisp()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 3C4 3 1.5 7 1.5 7S4 11 7 11s5.5-4 5.5-4S10 3 7 3z" stroke="currentColor" stroke-width="1.3"/><circle cx="7" cy="7" r="1.5" stroke="currentColor" stroke-width="1.3"/></svg>
+        </button>
+      </div>
+      <div class="api-btn-row">
+        <button class="api-btn" onclick="editApiKey()">Set API Key</button>
+      </div>
+      <div class="conn-row" id="connRow">
+        <div class="conn-dot off" id="connDot"></div>
+        <span class="conn-txt off" id="connTxt">Tidak ada API Key</span>
+      </div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-menu-item">
+        <div class="sb-mi-icon">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#888878" stroke-width="1.1"/><path d="M6.5 3.5v3M6.5 8.5h.01" stroke="#888878" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </div>
+        <div class="sb-mi-text"><p>STATISTIK API</p><p></p></div>
+        <svg class="sb-mi-arr" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </div>
+    </div>
+    <div class="sb-sec">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#888878" stroke-width="1.1"/><path d="M6.5 1s-2.5 2-2.5 5.5S6.5 12 6.5 12s2.5-2 2.5-5.5S6.5 1 6.5 1zM1 6.5h11" stroke="#888878" stroke-width="1.1" stroke-linecap="round"/></svg>
+        <p class="sb-sec-lbl" style="margin:0">BAHASA</p>
+      </div>
+      <div class="lang-row">
+        <button class="lang-btn active">Indonesia
+          <div class="lang-check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4l1.5 1.5 3.5-3.5" stroke="black" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </button>
+        <button class="lang-btn inactive">English</button>
+      </div>
+    </div>
+    <div class="sb-sec">
+      <div class="agus-sb">
+        <div class="agus-av">AG</div>
+        <div>
+          <span class="agus-name">AGUS GEOL GEOL</span>
+          <span class="agus-desc">kreator konten geal-geol 🕺</span>
+        </div>
+        <div class="agus-wave"><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+    </div>
+    <div class="sb-footer"><p>v1.0.0 • SAKENIFIC</p></div>
+  </div>
+
+  <!-- ======= HOME ======= -->
+  <div class="page active" id="pg-home">
+    <header class="header">
+      <div class="h-logo">
+        <p>SAKENIFIC</p>
+        <p>magnific api</p>
+      </div>
+      <div class="h-counter">
+        <div class="h-dot"></div>
+        <span class="h-num" id="homeGen">0</span>
+        <span class="h-gen">generated</span>
+      </div>
+      <button class="h-menu-btn" onclick="openSidebar()">
+        <div class="h-menu-icon">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="5" r="3" stroke="#F5C518" stroke-width="1.3"/><path d="M1.5 13.5c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="#F5C518" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </div>
+        <span class="h-menu-lbl">MENU</span>
+      </button>
+    </header>
+    <div class="hero-bg">
+      <div class="hero-grad"></div>
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <p class="hero-tag">BUAT TANPA BATAS</p>
+        <p class="hero-title">SAKENIFIC</p>
+        <p class="hero-desc">Create AI videos, images, voices, lipsync, and motion control with magnific apikey</p>
+      </div>
+    </div>
+    <div class="marquee">
+      <div class="marquee-inner">
+        <span>Dibuat 100% via Magnific API • Hasil mungkin bervariasi tergantung prompt, kualitas gambar, model yang dipilih, dan pemrosesan API &nbsp;&nbsp;•&nbsp;&nbsp; Dibuat 100% via Magnific API • Hasil mungkin bervariasi tergantung prompt, kualitas gambar, model yang dipilih, dan pemrosesan API &nbsp;&nbsp;•&nbsp;&nbsp;</span>
+        <span>Dibuat 100% via Magnific API • Hasil mungkin bervariasi tergantung prompt, kualitas gambar, model yang dipilih, dan pemrosesan API &nbsp;&nbsp;•&nbsp;&nbsp; Dibuat 100% via Magnific API • Hasil mungkin bervariasi tergantung prompt &nbsp;&nbsp;•&nbsp;&nbsp;</span>
+      </div>
+    </div>
+    <div class="cards-wrap">
+      <button class="feat-card" onclick="goPage('motion')">
+        <div class="feat-bg"></div><div class="feat-glow"></div>
+        <div class="feat-body">
+          <div>
+            <div class="feat-badge">
+              <div class="feat-badge-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.8 3.6L14 5.5l-3 2.9.7 4.1L8 10.5l-3.7 2 .7-4.1L2 5.5l4.2-.9L8 1z" stroke="#F5C518" stroke-width="1.3" stroke-linejoin="round" fill="rgba(245,197,24,0.15)"/></svg></div>
+              <span class="feat-badge-lbl">UNGGULAN</span>
+            </div>
+            <p class="feat-title">MOTION CONTROL</p>
+            <p class="feat-desc">Kontrol gerakan karakter AI dengan referensi video</p>
+          </div>
+          <div class="feat-link"><span>Mulai Sekarang</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M7 3l3 3-3 3" stroke="#F5C518" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+      </button>
+      <div class="grid2">
+        <button class="sm-card" onclick="goPage('motion')"><div class="sm-bg sm-bg-v"></div><div class="sm-glow"></div><div class="sm-body"><div class="sm-top"><div class="sm-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="#F5C518" stroke-width="1.3"/><path d="M6.5 5.5l4 2.5-4 2.5V5.5z" stroke="#F5C518" stroke-width="1.3" stroke-linejoin="round" fill="rgba(245,197,24,0.2)"/></svg></div><svg class="sm-arr" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 11L11 3M11 3H5M11 3V9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div><div class="sm-info"><p>VIDEO GENERATOR</p><p>Buat video AI yang menakjubkan</p></div></div></button>
+        <button class="sm-card" onclick="goPage('motion')"><div class="sm-bg sm-bg-i"></div><div class="sm-glow"></div><div class="sm-body"><div class="sm-top"><div class="sm-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="#F5C518" stroke-width="1.3"/><circle cx="6" cy="7" r="1.5" stroke="#F5C518" stroke-width="1.2"/><path d="M2 11l3.5-3.5 2 2L10 7l4 4" stroke="#F5C518" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><svg class="sm-arr" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 11L11 3M11 3H5M11 3V9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div><div class="sm-info"><p>IMAGE GENERATOR</p><p>Buat gambar AI yang memukau</p></div></div></button>
+        <button class="sm-card" onclick="goPage('motion')"><div class="sm-bg sm-bg-a"></div><div class="sm-glow"></div><div class="sm-body"><div class="sm-top"><div class="sm-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="5.5" y="1.5" width="5" height="8" rx="2.5" stroke="#F5C518" stroke-width="1.3"/><path d="M2.5 8.5a5.5 5.5 0 0011 0" stroke="#F5C518" stroke-width="1.3" stroke-linecap="round"/><line x1="8" y1="14" x2="8" y2="11" stroke="#F5C518" stroke-width="1.3" stroke-linecap="round"/></svg></div><svg class="sm-arr" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 11L11 3M11 3H5M11 3V9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div><div class="sm-info"><p>VOICE GENERATOR</p><p>Buat suara AI yang alami</p></div></div></button>
+        <button class="sm-card" onclick="goPage('motion')"><div class="sm-bg sm-bg-l"></div><div class="sm-glow"></div><div class="sm-body"><div class="sm-top"><div class="sm-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="#F5C518" stroke-width="1.3"/><path d="M2 13.5c.5-2.5 2.8-4 6-4s5.5 1.5 6 4" stroke="#F5C518" stroke-width="1.3" stroke-linecap="round"/><path d="M5 11.5c.5 1 1.5 1.5 3 1.5s2.5-.5 3-1.5" stroke="#F5C518" stroke-width="1.1" stroke-linecap="round"/></svg></div><svg class="sm-arr" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 11L11 3M11 3H5M11 3V9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div><div class="sm-info"><p>LIPSYNC</p><p>Sinkronisasi bibir realistis</p></div></div></button>
+      </div>
+      <button class="full-card" onclick="goPage('motion')">
+        <div class="fc-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5.5 8.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM8.5 6l4 4" stroke="#F5C518" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+        <div class="fc-txt"><p>API KEY CHECKER</p><p>Validasi API key Magnific</p></div>
+        <svg class="fc-arr" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ======= MOTION ======= -->
+  <div class="page" id="pg-motion">
+    <header class="header">
+      <div class="h-logo"><p>SAKENIFIC</p><p>motion control</p></div>
+      <div class="h-counter"><div class="h-dot"></div><span class="h-num" id="motionGen">0</span><span class="h-gen">generated</span></div>
+      <button class="h-menu-btn" onclick="openSidebar()">
+        <div class="h-menu-icon"><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="5" r="3" stroke="#F5C518" stroke-width="1.3"/><path d="M1.5 13.5c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="#F5C518" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+        <span class="h-menu-lbl">MENU</span>
+      </button>
+    </header>
+    <button class="back-btn" onclick="goPage('home')">← Kembali</button>
+    <div class="motion-hero">
+      <p class="motion-title">SAKEN GEAL-GEOL</p>
+      <p class="motion-sub">motion control generator by SAKURA</p>
+      <div class="warn-box">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="margin-top:2px;flex-shrink:0"><path d="M6.5 1.5L12 11H1L6.5 1.5z" stroke="rgba(200,120,0,0.7)" stroke-width="1.2" stroke-linejoin="round"/><path d="M6.5 5v3M6.5 9.5h.01" stroke="rgba(200,120,0,0.7)" stroke-width="1.2" stroke-linecap="round"/></svg>
+        <p class="warn-txt">Gunakan referensi yang wajar, jangan terlalu vulgar agar tidak melanggar S&K Magnific dan gagal generate</p>
+      </div>
+    </div>
+    <div class="tab-row">
+      <button class="mtab act">Motion Control</button>
+      <button class="mtab soon">Video Generator</button>
+    </div>
+    <div class="mform">
+      <div>
+        <div class="flbl">API KEY <span class="hint">Magnific / Freepik API key — tidak disimpan</span></div>
+        <div class="inp-rel">
+          <input type="password" class="finput" placeholder="Masukkan API key kamu..." id="apiKeyInput"/>
+          <button class="inp-eye" onclick="toggleEye('apiKeyInput',this)">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 3C4 3 1.5 7 1.5 7S4 11 7 11s5.5-4 5.5-4S10 3 7 3z" stroke="#888878" stroke-width="1.3"/><circle cx="7" cy="7" r="1.5" stroke="#888878" stroke-width="1.3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div>
+        <div class="flbl">REFERENCE IMAGE <span class="hint">JPG, PNG, WebP · maks 15 MB</span></div>
+        <div class="uzone" id="imgZone" onclick="document.getElementById('imgFile').click()" ondragover="ev(event)" ondrop="dropFile(event,'imgFile','imgLabel')">
+          <input type="file" id="imgFile" accept="image/*" style="display:none" onchange="fileChosen(this,'imgLabel','imgPreview')"/>
+          <div class="uzone-icon" id="imgIcon">📷</div>
+          <p class="uzone-title" id="imgLabel">Klik atau drag gambar di sini</p>
+          <p class="uzone-sub">JPG · PNG · WebP</p>
+          <img id="imgPreview" style="display:none;max-width:100%;max-height:120px;border-radius:8px;margin-top:8px" alt="preview"/>
+        </div>
+      </div>
+      <div>
+        <div class="flbl">REFERENCE VIDEO <span class="hint">MP4, MOV, WebM · maks 100 MB</span></div>
+        <div class="uzone" onclick="document.getElementById('vidFile').click()" ondragover="ev(event)" ondrop="dropFile(event,'vidFile','vidLabel')">
+          <input type="file" id="vidFile" accept="video/*" style="display:none" onchange="fileChosen(this,'vidLabel',null)"/>
+          <div class="uzone-icon">🎬</div>
+          <p class="uzone-title" id="vidLabel">Klik atau drag video di sini</p>
+          <p class="uzone-sub">MP4 · MOV · WebM</p>
+          <p class="uzone-note">💡 Gunakan video referensi dari TikTok agar ukurannya kecil</p>
+        </div>
+      </div>
+      <div>
+        <div class="flbl">MODEL</div>
+        <div class="mlist">
+          <div class="mopt sel" onclick="selMod(this)" data-val="kling-v2-6"><div class="mradio"><div class="mrdot"></div></div><span class="mopt-name">Kling 2.6</span><span class="mtag t-std">Standard</span></div>
+          <div class="mopt" onclick="selMod(this)" data-val="kling-v2-6-pro"><div class="mradio"><div class="mrdot"></div></div><span class="mopt-name">Kling 2.6</span><span class="mtag t-pro">Pro</span></div>
+          <div class="mopt" onclick="selMod(this)" data-val="kling-v3"><div class="mradio"><div class="mrdot"></div></div><span class="mopt-name">Kling 3</span><span class="mtag t-std">Standard</span></div>
+          <div class="mopt" onclick="selMod(this)" data-val="kling-v3-pro"><div class="mradio"><div class="mrdot"></div></div><span class="mopt-name">Kling 3</span><span class="mtag t-pro">Pro</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="flbl">PROMPT <span class="hint">Opsional</span></div>
+        <textarea class="ptarea" id="promptInput" placeholder="Deskripsikan gerakan atau gaya yang diinginkan..."></textarea>
+      </div>
+      <div>
+        <div class="flbl">CHARACTER ORIENTATION</div>
+        <div class="orow">
+          <button class="obtn act" onclick="selO(this)" data-val="video">Video (default)</button>
+          <button class="obtn" onclick="selO(this)" data-val="image">Image</button>
+        </div>
+      </div>
+      <div>
+        <div class="flbl">CFG SCALE <span class="hint" id="cfgHint">0.50 · 0 = bebas, 1 = ketat</span></div>
+        <div class="srow">
+          <input type="range" min="0" max="1" step="0.01" value="0.5" id="cfgSlider" oninput="updCfg(this.value)"/>
+          <div class="sval" id="cfgVal">0.50</div>
+        </div>
+        <div class="shints"><span>0 (bebas)</span><span>1 (ketat)</span></div>
+      </div>
+      <button class="gen-btn" id="genBtn" onclick="generateVideo()">▶ Generate Video</button>
+      <div class="result-box" id="resultBox" style="display:none">
+        <p class="result-title">HASIL GENERATE</p>
+        <p class="result-status" id="resultStatus"></p>
+        <video id="resultVideo" controls style="display:none;width:100%;border-radius:8px;margin-top:8px"></video>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== STATE =====
+var state = {
+  apiKey: localStorage.getItem('saken_apikey') || '',
+  genCount: parseInt(localStorage.getItem('saken_count') || '0'),
+  apiVisible: false
+};
+
+// Init
+updateApiDisplay();
+updateCounters();
+
+function updateApiDisplay() {
+  var el = document.getElementById('apiDisp');
+  var dot = document.getElementById('connDot');
+  var txt = document.getElementById('connTxt');
+  if (state.apiKey) {
+    el.textContent = state.apiVisible ? state.apiKey : state.apiKey.slice(0,4) + '••••••••••' + state.apiKey.slice(-4);
+    dot.className = 'conn-dot on';
+    txt.className = 'conn-txt on';
+    txt.textContent = 'API TERHUBUNG';
+  } else {
+    el.textContent = 'Belum ada API key';
+    dot.className = 'conn-dot off';
+    txt.className = 'conn-txt off';
+    txt.textContent = 'Tidak ada API Key';
+  }
+}
+function updateCounters() {
+  document.getElementById('totalGen').textContent = state.genCount;
+  document.getElementById('homeGen').textContent = state.genCount;
+  document.getElementById('motionGen').textContent = state.genCount;
+}
+function toggleApiDisp() {
+  state.apiVisible = !state.apiVisible;
+  updateApiDisplay();
+}
+function editApiKey() {
+  var k = prompt('Masukkan Magnific / Freepik API key:');
+  if (k && k.trim()) {
+    state.apiKey = k.trim();
+    localStorage.setItem('saken_apikey', state.apiKey);
+    document.getElementById('apiKeyInput').value = state.apiKey;
+    updateApiDisplay();
+    closeSidebar();
+  }
+}
+
+// ===== NAV =====
+function goPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('pg-' + id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('on');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('on');
+}
+
+// ===== FORM =====
+function toggleEye(inputId, btn) {
+  var inp = document.getElementById(inputId);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+function fileChosen(inp, labelId, previewId) {
+  if (inp.files && inp.files[0]) {
+    document.getElementById(labelId).textContent = inp.files[0].name;
+    if (previewId) {
+      var prev = document.getElementById(previewId);
+      var reader = new FileReader();
+      reader.onload = function(e) { prev.src = e.target.result; prev.style.display = 'block'; };
+      reader.readAsDataURL(inp.files[0]);
+    }
+  }
+}
+function ev(e) { e.preventDefault(); }
+function dropFile(e, inputId, labelId) {
+  e.preventDefault();
+  var dt = e.dataTransfer;
+  if (dt.files.length) {
+    var inp = document.getElementById(inputId);
+    inp.files = dt.files;
+    fileChosen(inp, labelId, inputId === 'imgFile' ? 'imgPreview' : null);
+  }
+}
+function selMod(el) {
+  document.querySelectorAll('.mopt').forEach(m => m.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function selO(el) {
+  document.querySelectorAll('.obtn').forEach(b => b.classList.remove('act'));
+  el.classList.add('act');
+}
+function updCfg(v) {
+  var f = parseFloat(v).toFixed(2);
+  document.getElementById('cfgVal').textContent = f;
+  document.getElementById('cfgHint').textContent = f + ' · 0 = bebas, 1 = ketat';
+}
+
+// ===== GENERATE (pakai proxy Vercel) =====
+async function generateVideo() {
+  var apiKey = document.getElementById('apiKeyInput').value.trim() || state.apiKey;
+  if (!apiKey) { alert('Masukkan API key dulu!'); return; }
+
+  var imgFile = document.getElementById('imgFile').files[0];
+  var vidFile = document.getElementById('vidFile').files[0];
+  if (!imgFile) { alert('Upload Reference Image dulu!'); return; }
+  if (!vidFile) { alert('Upload Reference Video dulu!'); return; }
+
+  var model = document.querySelector('.mopt.sel').dataset.val;
+  var prompt = document.getElementById('promptInput').value;
+  var orientation = document.querySelector('.obtn.act').dataset.val;
+  var cfg = parseFloat(document.getElementById('cfgSlider').value);
+
+  // Save API key
+  state.apiKey = apiKey;
+  localStorage.setItem('saken_apikey', apiKey);
+  updateApiDisplay();
+
+  var btn = document.getElementById('genBtn');
+  var resultBox = document.getElementById('resultBox');
+  var resultStatus = document.getElementById('resultStatus');
+  var resultVideo = document.getElementById('resultVideo');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating...';
+  resultBox.style.display = 'block';
+  resultStatus.className = 'result-status';
+  resultStatus.textContent = '⏳ Mengirim request ke Magnific API...';
+  resultVideo.style.display = 'none';
+
+  try {
+    // Convert files to base64
+    var imgB64 = await toBase64(imgFile);
+    var vidB64 = await toBase64(vidFile);
+
+    // Kirim ke proxy /api/motion
+    var res = await fetch('/api/motion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        apiKey: apiKey,
+        model: model,
+        prompt: prompt,
+        orientation: orientation,
+        cfg_scale: cfg,
+        image: imgB64,
+        image_type: imgFile.type,
+        video: vidB64,
+        video_type: vidFile.type
+      })
+    });
+
+    var data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Gagal generate: ' + res.status);
+    }
+
+    // Poll status jika ada task_id
+    if (data.task_id) {
+      resultStatus.textContent = '⏳ Proses... (task: ' + data.task_id + ')';
+      await pollStatus(apiKey, data.task_id);
+    } else if (data.video_url) {
+      showResult(data.video_url);
+    } else {
+      resultStatus.className = 'result-status err';
+      resultStatus.textContent = '❌ Response tidak dikenali: ' + JSON.stringify(data);
+    }
+
+  } catch (err) {
+    resultStatus.className = 'result-status err';
+    resultStatus.textContent = '❌ Error: ' + err.message;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '▶ Generate Video';
+}
+
+async function pollStatus(apiKey, taskId) {
+  var resultStatus = document.getElementById('resultStatus');
+  var max = 60; // max 60x poll = 5 menit
+  for (var i = 0; i < max; i++) {
+    await sleep(5000);
+    try {
+      var res = await fetch('/api/status?task_id=' + taskId + '&apiKey=' + encodeURIComponent(apiKey));
+      var data = await res.json();
+      if (data.status === 'completed' && data.video_url) {
+        showResult(data.video_url);
+        return;
+      } else if (data.status === 'failed') {
+        document.getElementById('resultStatus').className = 'result-status err';
+        document.getElementById('resultStatus').textContent = '❌ Generate gagal: ' + (data.message || 'Unknown error');
+        return;
+      } else {
+        resultStatus.textContent = '⏳ Status: ' + (data.status || 'processing') + '... (' + (i+1) + '/' + max + ')';
+      }
+    } catch(e) { /* retry */ }
+  }
+  resultStatus.className = 'result-status err';
+  resultStatus.textContent = '❌ Timeout — cek langsung di dashboard Magnific';
+}
+
+function showResult(url) {
+  var resultStatus = document.getElementById('resultStatus');
+  var resultVideo = document.getElementById('resultVideo');
+  resultStatus.className = 'result-status ok';
+  resultStatus.textContent = '✅ Berhasil!';
+  resultVideo.src = url;
+  resultVideo.style.display = 'block';
+  state.genCount++;
+  localStorage.setItem('saken_count', state.genCount);
+  updateCounters();
+}
+
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    var r = new FileReader();
+    r.onload = () => resolve(r.result.split(',')[1]);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>
