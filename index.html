@@ -204,6 +204,7 @@ input[type=range]{flex:1;accent-color:#F5C518;height:4px;cursor:pointer}
 /* LOADING SPINNER */
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,0.3);border-top-color:#000;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:8px}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes stepPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,197,24,0.4)}50%{box-shadow:0 0 0 6px rgba(245,197,24,0)}}
 </style>
 </head>
 <body>
@@ -428,10 +429,39 @@ input[type=range]{flex:1;accent-color:#F5C518;height:4px;cursor:pointer}
         <div class="shints"><span>0 (bebas)</span><span>1 (ketat)</span></div>
       </div>
       <button class="gen-btn" id="genBtn" onclick="generateVideo()">▶ Generate Video</button>
-      <div class="result-box" id="resultBox" style="display:none">
-        <p class="result-title">HASIL GENERATE</p>
-        <p class="result-status" id="resultStatus"></p>
-        <video id="resultVideo" controls style="display:none;width:100%;border-radius:8px;margin-top:8px"></video>
+
+      <!-- PROGRESS STEPS -->
+      <div id="progressBox" style="display:none;background:#0f0f0f;border:1px solid #2a2a1a;border-radius:14px;padding:16px;margin-top:4px">
+        <div id="stepsWrap" style="display:flex;flex-direction:column;gap:0"></div>
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:10px;color:rgba(255,255,255,0.3)" id="progText">Memulai...</span>
+            <span style="font-size:10px;font-weight:700;color:#F5C518" id="progPct">0%</span>
+          </div>
+          <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden">
+            <div id="progBar" style="height:100%;background:linear-gradient(90deg,#F5C518,#b8890a);border-radius:2px;width:0%;transition:width 0.6s ease"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULT SUCCESS -->
+      <div id="resultBox" style="display:none;background:#0f0f0f;border:1px solid rgba(34,197,94,0.25);border-radius:14px;padding:16px;margin-top:4px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px rgba(34,197,94,0.6)"></div>
+          <span style="font-size:11px;font-weight:700;color:#22c55e;letter-spacing:2px">VIDEO BERHASIL DIBUAT!</span>
+        </div>
+        <video id="resultVideo" controls style="width:100%;border-radius:10px;display:none"></video>
+        <a id="resultDownload" style="display:none;margin-top:10px;width:100%;padding:10px;background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.3);border-radius:8px;text-align:center;font-size:12px;font-weight:700;color:#F5C518;text-decoration:none" download="sakenific-video.mp4">⬇ Download Video</a>
+      </div>
+
+      <!-- RESULT ERROR -->
+      <div id="errorBox" style="display:none;background:#0f0f0f;border:1px solid rgba(220,50,50,0.25);border-radius:14px;padding:14px;margin-top:4px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div style="width:8px;height:8px;border-radius:50%;background:#e05050"></div>
+          <span style="font-size:11px;font-weight:700;color:#e05050;letter-spacing:2px">GENERATE GAGAL</span>
+        </div>
+        <p id="errorMsg" style="font-size:11px;color:rgba(220,80,80,0.7);line-height:1.6"></p>
+        <button onclick="resetGen()" style="margin-top:10px;width:100%;padding:9px;background:transparent;border:1px solid rgba(220,50,50,0.3);border-radius:8px;font-size:11px;font-weight:700;color:#e05050;cursor:pointer;font-family:Inter,sans-serif">Coba Lagi</button>
       </div>
     </div>
   </div>
@@ -541,11 +571,86 @@ function updCfg(v) {
   document.getElementById('cfgHint').textContent = f + ' · 0 = bebas, 1 = ketat';
 }
 
+// ===== PROGRESS STEPS =====
+var STEPS = [
+  { id:'s1', icon:'📁', title:'UPLOAD BERHASIL',          desc:'Gambar & video siap diproses' },
+  { id:'s2', icon:'⚡', title:'MENGIRIM KE MAGNIFIC API', desc:'Koneksi ke server Magnific...' },
+  { id:'s3', icon:'🤖', title:'AI MEMPROSES VIDEO',       desc:'Model Kling sedang bekerja...' },
+  { id:'s4', icon:'✨', title:'FINISHING',                desc:'Video hampir siap...' },
+  { id:'s5', icon:'🎉', title:'SELESAI',                  desc:'Video berhasil dibuat!' }
+];
+
+function buildSteps() {
+  var wrap = document.getElementById('stepsWrap');
+  wrap.innerHTML = '';
+  STEPS.forEach(function(s, i) {
+    var div = document.createElement('div');
+    div.id = s.id;
+    div.style.cssText = 'display:flex;align-items:flex-start;gap:12px;padding:10px 0;position:relative';
+    if (i < STEPS.length-1) {
+      div.style.borderBottom = '1px solid rgba(255,255,255,0.04)';
+    }
+    div.innerHTML =
+      '<div class="si" style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;border:2px solid rgba(255,255,255,0.08);background:#1a1a0a;position:relative;z-index:1">'+s.icon+'</div>'+
+      '<div style="flex:1;padding-top:4px">'+
+        '<div class="st" style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.25);letter-spacing:0.5px">'+s.title+'</div>'+
+        '<div class="sd" style="font-size:10px;color:rgba(255,255,255,0.15);margin-top:2px">'+s.desc+'</div>'+
+      '</div>';
+    wrap.appendChild(div);
+  });
+}
+
+function setStepState(stepNum, state2) {
+  // state2: 'wait' | 'active' | 'done' | 'error'
+  var el = document.getElementById('s'+stepNum);
+  if (!el) return;
+  var si = el.querySelector('.si');
+  var st = el.querySelector('.st');
+  var sd = el.querySelector('.sd');
+  if (state2 === 'done') {
+    si.style.cssText = 'width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;border:2px solid rgba(245,197,24,0.4);background:rgba(245,197,24,0.1);position:relative;z-index:1';
+    si.innerHTML = '✓';
+    st.style.color = '#F5C518';
+    sd.style.color = 'rgba(245,197,24,0.45)';
+  } else if (state2 === 'active') {
+    si.style.cssText = 'width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;border:2px solid #F5C518;background:rgba(245,197,24,0.08);position:relative;z-index:1;animation:stepPulse 1.5s ease-in-out infinite';
+    si.innerHTML = '<div style="width:30px;height:30px;border-radius:50%;border:2px solid transparent;border-top-color:#F5C518;animation:spin 0.8s linear infinite;position:absolute;inset:-2px"></div>'+STEPS[stepNum-1].icon;
+    st.style.color = '#fff';
+    sd.style.color = 'rgba(255,255,255,0.45)';
+  } else if (state2 === 'error') {
+    si.style.cssText = 'width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;border:2px solid rgba(220,50,50,0.4);background:rgba(220,50,50,0.08);position:relative;z-index:1';
+    si.innerHTML = '✕';
+    st.style.color = '#e05050';
+    sd.style.color = 'rgba(220,80,80,0.5)';
+  }
+}
+
+function updateProgress(pct, txt) {
+  document.getElementById('progBar').style.width = pct + '%';
+  document.getElementById('progPct').textContent = pct + '%';
+  document.getElementById('progText').textContent = txt;
+}
+
+function resetGen() {
+  document.getElementById('progressBox').style.display = 'none';
+  document.getElementById('resultBox').style.display = 'none';
+  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('genBtn').disabled = false;
+  document.getElementById('genBtn').innerHTML = '▶ Generate Video';
+}
+
+function showError(msg) {
+  document.getElementById('progressBox').style.display = 'none';
+  document.getElementById('errorBox').style.display = 'block';
+  document.getElementById('errorMsg').textContent = msg;
+  document.getElementById('genBtn').disabled = false;
+  document.getElementById('genBtn').innerHTML = '▶ Generate Video';
+}
+
 // ===== GENERATE (pakai proxy Vercel) =====
 async function generateVideo() {
   var apiKey = document.getElementById('apiKeyInput').value.trim() || state.apiKey;
   if (!apiKey) { alert('Masukkan API key dulu!'); return; }
-
   var imgFile = document.getElementById('imgFile').files[0];
   var vidFile = document.getElementById('vidFile').files[0];
   if (!imgFile) { alert('Upload Reference Image dulu!'); return; }
@@ -556,105 +661,107 @@ async function generateVideo() {
   var orientation = document.querySelector('.obtn.act').dataset.val;
   var cfg = parseFloat(document.getElementById('cfgSlider').value);
 
-  // Save API key
   state.apiKey = apiKey;
   localStorage.setItem('saken_apikey', apiKey);
   updateApiDisplay();
 
   var btn = document.getElementById('genBtn');
-  var resultBox = document.getElementById('resultBox');
-  var resultStatus = document.getElementById('resultStatus');
-  var resultVideo = document.getElementById('resultVideo');
-
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Generating...';
-  resultBox.style.display = 'block';
-  resultStatus.className = 'result-status';
-  resultStatus.textContent = '⏳ Mengirim request ke Magnific API...';
-  resultVideo.style.display = 'none';
+
+  // Show progress
+  document.getElementById('resultBox').style.display = 'none';
+  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('progressBox').style.display = 'block';
+  buildSteps();
+  setStepState(1, 'done');
+  setStepState(2, 'active');
+  updateProgress(15, 'Mengonversi file...');
 
   try {
-    // Convert files to base64
     var imgB64 = await toBase64(imgFile);
     var vidB64 = await toBase64(vidFile);
 
-    // Kirim ke proxy /api/motion
+    updateProgress(25, 'Mengirim ke Magnific API...');
+
     var res = await fetch('/api/motion', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        apiKey: apiKey,
-        model: model,
-        prompt: prompt,
-        orientation: orientation,
-        cfg_scale: cfg,
-        image: imgB64,
-        image_type: imgFile.type,
-        video: vidB64,
-        video_type: vidFile.type
+        apiKey: apiKey, model: model, prompt: prompt,
+        orientation: orientation, cfg_scale: cfg,
+        image: imgB64, image_type: imgFile.type,
+        video: vidB64, video_type: vidFile.type
       })
     });
 
     var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'API error: ' + res.status);
 
-    if (!res.ok) {
-      throw new Error(data.error || 'Gagal generate: ' + res.status);
-    }
+    setStepState(2, 'done');
+    setStepState(3, 'active');
+    updateProgress(45, 'AI sedang memproses video...');
 
-    // Poll status jika ada task_id
-    if (data.task_id) {
-      resultStatus.textContent = '⏳ Proses... (task: ' + data.task_id + ')';
-      await pollStatus(apiKey, data.task_id);
-    } else if (data.video_url) {
-      showResult(data.video_url);
+    if (data.task_id || data.data?.task_id) {
+      var taskId = data.task_id || data.data?.task_id;
+      await pollStatus(apiKey, taskId);
+    } else if (data.video_url || data.data?.video_url) {
+      showResult(data.video_url || data.data?.video_url);
     } else {
-      resultStatus.className = 'result-status err';
-      resultStatus.textContent = '❌ Response tidak dikenali: ' + JSON.stringify(data);
+      throw new Error('Response tidak dikenali: ' + JSON.stringify(data).slice(0,100));
     }
 
   } catch (err) {
-    resultStatus.className = 'result-status err';
-    resultStatus.textContent = '❌ Error: ' + err.message;
+    setStepState(2, 'error');
+    showError('❌ ' + err.message);
   }
-
-  btn.disabled = false;
-  btn.innerHTML = '▶ Generate Video';
 }
 
 async function pollStatus(apiKey, taskId) {
-  var resultStatus = document.getElementById('resultStatus');
-  var max = 60; // max 60x poll = 5 menit
+  var max = 72;
   for (var i = 0; i < max; i++) {
     await sleep(5000);
+    var pct = Math.min(45 + Math.floor((i/max)*45), 89);
+    var mins = Math.floor((i*5)/60);
+    var secs = (i*5) % 60;
+    updateProgress(pct, 'Proses... ' + (mins>0?mins+'m ':'') + secs + 's');
+    if (i === 10) { setStepState(3,'done'); setStepState(4,'active'); updateProgress(pct,'Finishing render...'); }
     try {
       var res = await fetch('/api/status?task_id=' + taskId + '&apiKey=' + encodeURIComponent(apiKey));
       var data = await res.json();
-      if (data.status === 'completed' && data.video_url) {
-        showResult(data.video_url);
-        return;
-      } else if (data.status === 'failed') {
-        document.getElementById('resultStatus').className = 'result-status err';
-        document.getElementById('resultStatus').textContent = '❌ Generate gagal: ' + (data.message || 'Unknown error');
-        return;
-      } else {
-        resultStatus.textContent = '⏳ Status: ' + (data.status || 'processing') + '... (' + (i+1) + '/' + max + ')';
+      var status = data.status || data.data?.status || 'processing';
+      var videoUrl = data.video_url || data.data?.video_url || null;
+      if ((status === 'completed' || status === 'succeed') && videoUrl) {
+        showResult(videoUrl); return;
+      } else if (status === 'failed' || status === 'error') {
+        throw new Error('Generate gagal di server Magnific');
       }
-    } catch(e) { /* retry */ }
+    } catch(e) {
+      if (e.message.includes('gagal')) { setStepState(3,'error'); showError('❌ ' + e.message); return; }
+    }
   }
-  resultStatus.className = 'result-status err';
-  resultStatus.textContent = '❌ Timeout — cek langsung di dashboard Magnific';
+  setStepState(4,'error');
+  showError('❌ Timeout (6 menit) — cek dashboard Magnific');
 }
 
 function showResult(url) {
-  var resultStatus = document.getElementById('resultStatus');
-  var resultVideo = document.getElementById('resultVideo');
-  resultStatus.className = 'result-status ok';
-  resultStatus.textContent = '✅ Berhasil!';
-  resultVideo.src = url;
-  resultVideo.style.display = 'block';
-  state.genCount++;
-  localStorage.setItem('saken_count', state.genCount);
-  updateCounters();
+  setStepState(4, 'done');
+  setStepState(5, 'done');
+  updateProgress(100, 'Selesai!');
+  setTimeout(function() {
+    document.getElementById('progressBox').style.display = 'none';
+    var rb = document.getElementById('resultBox');
+    rb.style.display = 'block';
+    var rv = document.getElementById('resultVideo');
+    rv.src = url; rv.style.display = 'block';
+    var dl = document.getElementById('resultDownload');
+    dl.href = url; dl.style.display = 'block';
+    state.genCount++;
+    localStorage.setItem('saken_count', state.genCount);
+    updateCounters();
+    document.getElementById('genBtn').disabled = false;
+    document.getElementById('genBtn').innerHTML = '▶ Generate Video';
+  }, 800);
 }
 
 function toBase64(file) {
